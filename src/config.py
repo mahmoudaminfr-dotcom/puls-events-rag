@@ -1,4 +1,5 @@
 ﻿import os
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -18,7 +19,7 @@ EVALUATION_DATA_DIR = DATA_DIR / "evaluation"
 
 # Fichiers de données par défaut
 RAW_EVENTS_FILE = RAW_DATA_DIR / "openagenda_events_raw.json"
-PROCESSED_EVENTS_FILE = PROCESSED_DATA_DIR / "events_cleaned.parquet"
+PROCESSED_EVENTS_FILE = PROCESSED_DATA_DIR / "events_cleaned.json"
 PROCESSED_EVENTS_CSV = PROCESSED_DATA_DIR / "events_cleaned.csv"
 
 # Configuration API Open Agenda (Opendatasoft v2.1)
@@ -27,7 +28,11 @@ OPENAGENDA_API_URL = (
     "evenements-publics-openagenda/records"
 )
 TARGET_CITY = os.getenv("TARGET_CITY", "Paris")
+REFERENCE_DATE = os.getenv(
+    "REFERENCE_DATE", datetime.now(timezone.utc).strftime("%Y-%m-%d")
+)
 HISTORY_DAYS = int(os.getenv("HISTORY_DAYS", "365"))
+FUTURE_DAYS = int(os.getenv("FUTURE_DAYS", "180"))
 MAX_EVENTS = int(os.getenv("MAX_EVENTS", "1000"))
 
 # Configuration Mistral AI & RAG

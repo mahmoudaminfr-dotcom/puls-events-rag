@@ -10,3 +10,7 @@ data/raw/*
 Thumbs.db
 .vscode/
 .idea/
+
+# Fichiers bruts volumineux
+data/raw/*.json
+data/processed/*.csv
