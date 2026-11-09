@@ -38,7 +38,7 @@ MAX_EVENTS = int(os.getenv("MAX_EVENTS", "1000"))
 # Configuration Mistral AI & RAG
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 EMBEDDING_MODEL = "mistral-embed"
-LLM_MODEL = "mistral-small-latest"
+LLM_MODEL = "open-mistral-nemo"
 
 # Paramètres de découpage (Chunking) et de recherche (Retrieval)
 CHUNK_SIZE = 800
@@ -52,3 +52,4 @@ def validate_config() -> None:
         raise ValueError(
             "La variable MISTRAL_API_KEY est manquante ou invalide dans le fichier .env."
         )
+

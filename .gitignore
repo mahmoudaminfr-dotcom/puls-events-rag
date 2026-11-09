@@ -14,3 +14,5 @@ Thumbs.db
 # Fichiers bruts volumineux
 data/raw/*.json
 data/processed/*.csv
+
+data/faiss_index/
