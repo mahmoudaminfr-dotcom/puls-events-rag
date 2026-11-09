@@ -87,7 +87,7 @@ class PulsEventsRAG:
             model=MISTRAL_CHAT_MODEL,
             api_key=MISTRAL_API_KEY,
             temperature=temperature,
-            max_retries=5,
+            max_retries=1,
         )
 
         self.prompt = ChatPromptTemplate.from_messages(
@@ -113,16 +113,16 @@ class PulsEventsRAG:
 
         return docs
 
-    def _invoke_with_backoff(self, payload: Dict[str, Any], max_attempts: int = 4) -> str:
-        """Exécute l'appel LLM avec gestion explicite du Rate Limit HTTP 429 de Mistral."""
+    def _invoke_with_backoff(self, payload: Dict[str, Any], max_attempts: int = 5) -> str:
+        """Exécute l'appel LLM avec gestion de la fenêtre glissante de quota par minute (429)."""
         for attempt in range(1, max_attempts + 1):
             try:
                 return self.chain.invoke(payload)
             except Exception as exc:
                 if "429" in str(exc) and attempt < max_attempts:
-                    wait_time = 2.5 * attempt
+                    wait_time = 15.0 * attempt
                     logger.warning(
-                        f"Rate limit Mistral (429) détecté. Nouvelle tentative {attempt}/{max_attempts} dans {wait_time:.1f}s..."
+                        f"Quota Mistral par minute atteint (429). Pause de {wait_time:.0f}s (tentative {attempt}/{max_attempts})..."
                     )
                     time.sleep(wait_time)
                 else:
@@ -140,8 +140,8 @@ class PulsEventsRAG:
         retrieved_docs = self.retrieve(question, k=k)
         context_str = format_retrieved_documents(retrieved_docs)
 
-        # Pause de 1.2s pour respecter le quota de 1 requête/seconde entre Embeddings et Chat
-        time.sleep(1.2)
+        # Pause de 1.5s entre l'appel Embeddings et l'appel Chat
+        time.sleep(1.5)
 
         answer = self._invoke_with_backoff(
             {
@@ -192,4 +192,3 @@ if __name__ == "__main__":
     for src in result["sources"]:
         print(f" - [{src['title']}] ({src['location_name']}) | Score L2: {src['score']:.4f} | URL: {src['url']}")
     print("=" * 80)
-
