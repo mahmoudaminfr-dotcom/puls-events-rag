@@ -73,7 +73,7 @@ puls-events-rag/
 
 ### 1. Cloner le dépôt
 ```bash
-git clone [https://github.com/mahmoudaminfr-dotcom/puls-events-rag.git](https://github.com/mahmoudaminfr-dotcom/puls-events-rag.git)
+git clone https://github.com/mahmoudaminfr-dotcom/puls-events-rag.git
 cd puls-events-rag
 ```
 
