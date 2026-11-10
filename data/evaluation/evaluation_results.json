@@ -1,22 +1,23 @@
 {
   "metrics": {
-    "total_questions": 10,
+    "total_questions": 11,
     "in_scope_count": 8,
-    "out_of_scope_count": 2,
+    "out_of_scope_count": 3,
     "retrieval_hit_rate_at_k": 0.875,
-    "mean_keyword_recall": 0.8333,
-    "mean_semantic_similarity_in_scope": 0.8984,
-    "mean_semantic_similarity_overall": 0.8986,
+    "mean_keyword_recall": 0.9167,
+    "mean_fact_score": 0.875,
+    "mean_semantic_similarity_in_scope": 0.9189,
+    "mean_semantic_similarity_overall": 0.9185,
     "out_of_scope_guardrail_accuracy": 1.0,
-    "overall_accuracy": 0.9
+    "overall_accuracy": 0.8182
   },
   "results": [
     {
       "id": "Q01",
       "category": "in_scope",
       "question": "Existe-t-il une exposition gratuite sur la photographie de mode à Paris ?",
-      "ground_truth": "Oui, l'exposition 'Frank Horvat. La Mode dans Paris retourne dans la rue' se tient à la Mairie de Paris (29 rue de Rivoli, 75001 Paris) du 3 mai au 22 août 2027. L'entrée est gratuite.",
-      "generated_answer": "D'après les événements disponibles dans la base **Puls-Events**, je ne dispose d'**aucun événement gratuit** spécifiquement dédié à la **photographie de mode** à Paris pour la période couverte (2026-2027).\n\nCependant, voici une alternative liée à la photographie en général, **gratuite** et accessible en 2027 :\n---\n**Titre** : *Exposition - Images Latentes*\n**Dates** : 4 mars – 2 avril 2027\n**Lieu** : Les Trois Bains (80 rue des Vignoles, 75020 Paris)\n**Résumé** : Exposition mettant en avant des photographes émergents et reconnus, avec une approche artistique contemporaine. *L'accès à l'exposition et à la chambre noire est gratuit*.\n**Lien** : [Images Latentes](https://openagenda.com/bicentenaire-photographie-fr/events/exposition-images-latentes)\n\n---\nPour la **photographie de mode**, l'événement prévu en **avril 2027** au **Palais Galliera** (sur l'histoire critique de la discipline) est payant et réservé à une rencontre académique. Si vous souhaitez des événements **exclusivement gratuits** sur ce thème, je ne peux malheureusement pas en proposer dans ma base actuelle.",
+      "ground_truth": "Oui, l'exposition 'Frank Horvat. La Mode dans Paris retourne dans la rue' se tient à la Mairie de Paris (29 rue de Rivoli, 75001 Paris) du 3 mai au 22 août 2027. L'entrée est gratuite. Lien : https://openagenda.com/bicentenaire-photographie-fr/events/frank-horvat-la-mode-dans-paris",
+      "generated_answer": "Je ne dispose d'aucun événement **gratuit** dans ma base Puls-Events concernant spécifiquement une **exposition sur la photographie de mode** à Paris.\n\nCependant, voici une exposition **gratuite** sur la photographie en général, si cela peut vous intéresser :\n---\n**Titre** : Exposition - *Images Latentes*\n**Dates** : 4 mars – 2 avril 2027\n**Lieu** : Les Trois Bains\n**Adresse** : 80 rue des Vignoles, 75020 Paris\n**Résumé** : Une exposition mettant en lumière des photographes amateurs, émergents et reconnus, ainsi que des enfants du 20ᵉ arrondissement, avec des tirages photographiques latents à 25 €. L’accès à l’exposition et à la chambre noire est **gratuit**.\n**URL** : [https://openagenda.com/bicentenaire-photographie-fr/events/exposition-images-latentes](https://openagenda.com/bicentenaire-photographie-fr/events/exposition-images-latentes)\n\n---\nPour une exposition **exclusivement dédiée à la photographie de mode**, aucun événement gratuit n’est disponible dans les données Puls-Events.",
       "expected_uids": [
         "31067167"
       ],
@@ -28,15 +29,25 @@
       ],
       "hit_rate": 0.0,
       "keyword_recall": 0.3333,
-      "semantic_similarity": 0.822,
+      "fact_score": 0.0,
+      "fact_checks": {
+        "title_ok": false,
+        "date_ok": false,
+        "location_ok": false,
+        "url_ok": false,
+        "no_forbidden_claims": true,
+        "fact_score": 0.0,
+        "all_valid": false
+      },
+      "semantic_similarity": 0.8566,
       "is_correct": false
     },
     {
       "id": "Q02",
       "category": "in_scope",
       "question": "Y a-t-il une exposition qui présente le métier et le travail des archéologues ?",
-      "ground_truth": "L'exposition 'Du cœur à l'ouvrage : dans l'intimité du travail des archéologues' est proposée à l'Espace 182 (182 rue Saint Honoré, 75001 Paris) du 26 avril au 25 juin 2027.",
-      "generated_answer": "Oui, voici l'événement correspondant à votre demande :\n\n**Titre :** *Du cœur à l'ouvrage : dans l'intimité du travail des archéologues*\n**Dates :** 26 avril 2027 – 25 juin 2027\n**Lieu :** Espace 182\n**Adresse :** 182, rue Saint-Honoré, 75001 Paris\n\n**Résumé :**\nCette exposition, créée par le **Service régional de l’archéologie (SRA) des Hauts-de-France**, met en lumière le quotidien des archéologues à travers un **échantillon de photographies inédites** issues de leurs fonds patrimoniaux. Les clichés, choisis pour leur **émotion esthétique**, révèlent des moments insolites ou poétiques du travail de terrain, des gestes professionnels et l’évolution de la discipline. Une plongée rare dans l’univers méconnu des archéologues.\n\n**Lien :** [Plus d’informations](https://openagenda.com/bicentenaire-photographie-fr/events/du-coeur-a-louvrage-dans-lintimite-du-travail-des-archeologues-8335551)\n\n*(Note : Cet événement n’est pas encore accessible en novembre 2026, mais il est programmé pour début 2027.)*",
+      "ground_truth": "L'exposition 'Du cœur à l'ouvrage : dans l'intimité du travail des archéologues' est proposée à l'Espace 182 (182 rue Saint Honoré, 75001 Paris) du 26 avril au 25 juin 2027. Lien : https://openagenda.com/bicentenaire-photographie-fr/events/du-coeur-a-louvrage-dans-lintimite-du-travail-des-archeologues-8335551",
+      "generated_answer": "Voici l'événement correspondant à votre demande :\n\n**Titre :** *Du cœur à l'ouvrage : dans l'intimité du travail des archéologues*\n**Dates et horaires :** Du **26 avril 2027** au **25 juin 2027** (horaires non précisés, accès libre selon les conditions du site du ministère de la Culture)\n**Lieu :** Espace 182\n**Adresse :** 182, rue Saint-Honoré, 75001 Paris\n\n**Résumé :**\nCette exposition, créée par le **Service régional de l’archéologie (SRA) des Hauts-de-France**, met en lumière le travail des archéologues à travers un **échantillon de photographies inédites** issues de leurs fonds patrimoniaux. Les clichés, choisis pour leur **émotion esthétique**, révèlent une vision poétique ou insolite du quotidien des professionnels, leurs gestes, l’histoire de la discipline et son évolution. Une plongée rare dans les coulisses d’un métier méconnu.\n\n**Lien URL :** [https://openagenda.com/bicentenaire-photographie-fr/events/du-coeur-a-louvrage-dans-lintimite-du-travail-des-archeologues-8335551](https://openagenda.com/bicentenaire-photographie-fr/events/du-coeur-a-louvrage-dans-lintimite-du-travail-des-archeologues-8335551)",
       "expected_uids": [
         "79890279"
       ],
@@ -47,16 +58,26 @@
         "80687562"
       ],
       "hit_rate": 1.0,
-      "keyword_recall": 0.6667,
-      "semantic_similarity": 0.9229,
+      "keyword_recall": 1.0,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.9583,
       "is_correct": true
     },
     {
       "id": "Q03",
       "category": "in_scope",
       "question": "Quel concert de musique classique autour de Schumann est programmé à Paris ?",
-      "ground_truth": "Le concert 'LE POINT DU JOUR | SCHUMANN | MAYER' a lieu au Théâtre des Champs-Elysées (15 Avenue Montaigne, 75008 Paris) le jeudi 22 avril 2027 à 20h00, avec des tarifs allant de 11.3 € à 72.34 €.",
-      "generated_answer": "Voici le concert de musique classique centré sur **Robert Schumann** programmé à Paris dans notre base Puls-Events :\n\n---\n**Titre** : LE POINT DU JOUR | SCHUMANN | MAYER\n**Dates / Horaires** : Jeudi 22 avril 2027, à **20h00**\n**Lieu** : Théâtre des Champs-Élysées\n**Adresse** : 15 Avenue Montaigne, 75008 Paris, France\n**URL** : [https://openagenda.com/shotgun/events/le-point-du-jour-or-schumann-or-mayer](https://openagenda.com/shotgun/events/le-point-du-jour-or-schumann-or-mayer)\n\n**Résumé** :\nCe concert explore l’univers intime de Schumann à travers son **Concerto pour piano en la mineur (op. 54)** et sa **Symphonie n°2 en ut majeur (op. 61)**, deux œuvres marquées par sa relation avec Clara et ses épreuves personnelles. Vadym Kholodenko au piano et l’Orchestre de chambre de Paris, dirigés par Riccardo Minasi, interprètent aussi l’*Ouverture Faust* de Felix Mendelssohn (Mayer). Une soirée sur **l’amour, la renaissance et la lumière**, où la musique devient un langage poétique.\n\n**Tarifs** : De **11,30 €** à **72,34 €**.\n\n---\n*Pour un événement plus axé sur l’histoire d’amour entre Clara et Robert Schumann, vous pouvez aussi consulter **FÉLIX, ROBERT ET CLARA** (Salle Cortot, 23 janvier 2027), bien que ce dernier inclue aussi Mendelssohn.*",
+      "ground_truth": "Le concert 'LE POINT DU JOUR | SCHUMANN | MAYER' a lieu au Théâtre des Champs-Elysées (15 Avenue Montaigne, 75008 Paris) le jeudi 22 avril 2027 à 20h00 (programme : Faust-Ouverture d'Emilie Mayer, Concerto pour piano et Symphonie n°2 de Schumann), avec des tarifs de 11.3 € à 72.34 €. Lien : https://openagenda.com/shotgun/events/le-point-du-jour-or-schumann-or-mayer",
+      "generated_answer": "Voici le concert de musique classique centré sur Schumann programmé à Paris selon votre période de référence (2026-11-05) :\n\n---\n**Titre** : LE POINT DU JOUR | SCHUMANN | MAYER\n**Dates et horaires** : Jeudi 22 avril 2027, à 20h00\n**Lieu** : Théâtre des Champs-Élysées\n**Adresse** : 15 Avenue Montaigne, 75008 Paris, France\n\n**Résumé** :\nCe concert explore l’univers intime de Robert Schumann à travers deux œuvres majeures : son *Concerto pour piano en la mineur, op. 54* et sa *Symphonie n°2 en ut majeur, op. 61*. La musique devient un langage d’amour et de renaissance, où l’on devine la présence de Clara, son épouse, et les épreuves traversées par le compositeur. Le programme s’ouvre avec l’*Ouverture Faust* de Felix Mendelssohn (Mayer), puis s’achève sur une symphonie lumineuse, reflétant la force de surmonter les épreuves. Vadym Kholodenko au piano et l’Orchestre de chambre de Paris, dirigés par Riccardo Minasi, donnent vie à cette soirée entre fragilité et allégresse.\n\n**Lien** : [https://openagenda.com/shotgun/events/le-point-du-jour-or-schumann-or-mayer](https://openagenda.com/shotgun/events/le-point-du-jour-or-schumann-or-mayer)\n\n---\n*Note* : Cet événement est programmé pour **2027**, mais il est le seul disponible dans votre base Puls-Events concernant Schumann. Aucun autre concert avec Schumann n’est listé pour une date antérieure à 2027.",
       "expected_uids": [
         "1709026"
       ],
@@ -66,16 +87,26 @@
         "70101268"
       ],
       "hit_rate": 1.0,
-      "keyword_recall": 0.6667,
-      "semantic_similarity": 0.9108,
-      "is_correct": true
+      "keyword_recall": 1.0,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": false,
+        "fact_score": 1.0,
+        "all_valid": false
+      },
+      "semantic_similarity": 0.9204,
+      "is_correct": false
     },
     {
       "id": "Q04",
       "category": "in_scope",
       "question": "Quand et où a lieu le concert de Jazzy Bazz à Paris, et quel est le prix ?",
-      "ground_truth": "Le concert 'JAZZY BAZZ - ZÉNITH PARIS' se déroule au Zénith Paris - La Villette (211 Avenue Jean Jaurès, 75019 Paris) le jeudi 15 avril 2027 à 20h00. Les billets coûtent entre 35.99 € et 59.99 €.",
-      "generated_answer": "D'après les événements disponibles dans la base **Puls-Events**, voici les informations concernant le concert de **Jazzy Bazz** à Paris :\n\n---\n**Titre de l'événement** : JAZZY BAZZ - ZÉNITH PARIS\n**Date et heure** : Jeudi 15 avril 2027, à **20h00** (soirée complète de 18h00 à 21h00)\n**Lieu** : Zénith Paris - La Villette\n**Adresse** : 211 Avenue Jean Jaurès, 75019 Paris, France\n**Tarifs** : De **35,99 €** à **59,99 €** (selon les places choisies).\n\n**Résumé** :\nCe concert marque l'occasion d'écouter Jazzy Bazz à l'aube de la sortie d'un nouvel album, dans une ambiance où son parcours artistique exigeant et son approche artisanale du rap sont mis en avant. Une soirée dédiée à un artiste emblématique du 19e arrondissement, connu pour son exigence et sa quête de perfection.\n\n**Lien** : [JAZZY BAZZ - ZÉNITH PARIS](https://openagenda.com/shotgun/events/jazzy-bazz-zenith-paris)\n\n---\n*Note* : Cet événement est prévu pour **2027**, donc il ne sera pas disponible avant cette date.",
+      "ground_truth": "Le concert 'JAZZY BAZZ - ZÉNITH PARIS' se déroule au Zénith Paris - La Villette (211 Avenue Jean Jaurès, 75019 Paris) le jeudi 15 avril 2027 à 20h00. Les billets coûtent entre 35.99 € et 59.99 €. Lien : https://openagenda.com/shotgun/events/jazzy-bazz-zenith-paris",
+      "generated_answer": "Je ne dispose d'aucun événement correspondant à cette date (2026-11-05) dans ma base Puls-Events. Le concert de Jazzy Bazz au Zénith Paris est prévu pour le **jeudi 15 avril 2027 à 20h00**.\n\nSi vous souhaitez des informations sur cet événement, voici les détails :\n- **Titre** : JAZZY BAZZ - ZÉNITH PARIS\n- **Lieu** : Zénith Paris - La Villette, 211 Avenue Jean Jaurès, 75019 Paris\n- **Tarifs** : De **35,99 € à 59,99 €**\n- **Lien** : [JAZZY BAZZ - ZÉNITH PARIS](https://openagenda.com/shotgun/events/jazzy-bazz-zenith-paris)",
       "expected_uids": [
         "62653116"
       ],
@@ -86,15 +117,25 @@
       ],
       "hit_rate": 1.0,
       "keyword_recall": 1.0,
-      "semantic_similarity": 0.9151,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.9281,
       "is_correct": true
     },
     {
       "id": "Q05",
       "category": "in_scope",
       "question": "Je cherche un concert rock en hommage au groupe The Clash à Paris.",
-      "ground_truth": "Vous pouvez assister au concert 'The Last Band In Town : Hommage à The Clash' au Théâtre Traversière (15 bis Rue Traversière, 75012 Paris) le samedi 20 mars 2027 à 20h00, à partir de 16.95 €.",
-      "generated_answer": "Voici l'événement qui correspond parfaitement à votre recherche :\n\n**Titre :** The Last Band In Town : Hommage à The Clash\n**Dates / Horaires :** Samedi 20 mars 2027, à partir de 20h00 (jusqu'environ 20h30)\n**Lieu :** Théâtre Traversière\n**Adresse :** 15 bis Rue Traversière, 75012 Paris\n\n**Résumé :**\n*The Last Band in Town* revisite l’intégralité de la discographie du **Clash**, des premiers albums à *Combat Rock*, en passant par *London Calling*. Ce concert hommage rend hommage à l’esprit punk du groupe avec des titres emblématiques comme *London Calling*, *Should I Stay or Should I Go*, *Rock the Casbah* et *Complete Control*. Créé en 2012 pour célébrer l’héritage de **Joe Strummer**, ce groupe (composé de musiciens ayant joué dans des formations comme *La Ruda* ou *Casbah Club*) offre un live intense et fidèle à l’énergie originale du Clash.\n\n**Lien :** [The Last Band In Town : Hommage à The Clash](https://openagenda.com/shotgun/events/the-last-band-in-town-hommage-a-the-clash)\n\n**Tarif :** À partir de **16,95 €**.\n\n---\n*Note : Cet événement est prévu pour mars 2027, mais je ne dispose pas d’autres concerts rock en hommage au Clash à Paris pour les dates proches de votre demande actuelle (novembre 2026).*",
+      "ground_truth": "Vous pouvez assister au concert 'The Last Band In Town : Hommage à The Clash' au Théâtre Traversière (15 bis Rue Traversière, 75012 Paris) le samedi 20 mars 2027 à 20h00, à partir de 16.95 €. Lien : https://openagenda.com/shotgun/events/the-last-band-in-town-hommage-a-the-clash",
+      "generated_answer": "Voici l'événement correspondant à votre recherche :\n\n**Titre :** The Last Band In Town : Hommage à The Clash\n\n**Dates et horaires :**\nSamedi 20 mars 2027, à partir de **19h00** (jusqu'environ 20h30)\n\n**Lieu et adresse :**\nThéâtre Traversière\n15 bis Rue Traversière, 75012 Paris, France\n\n**Résumé :**\n*The Last Band in Town* revisite l’intégralité de la discographie du **Clash**, des premiers albums à *Combat Rock*, en passant par *London Calling*. Ce concert hommage rend hommage à l’esprit punk et à l’énergie inégalée du groupe, avec des titres emblématiques comme *London Calling*, *Should I Stay or Should I Go*, *Rock the Casbah* et *Complete Control*. Créé en 2012 pour célébrer l’héritage de **Joe Strummer**, ce groupe (composé de musiciens ayant joué dans des formations comme *La Ruda*, *Zenzile* ou *Casbah Club*) incarne une fidélité totale à l’âme du Clash, mêlant passion, sincérité et une intensité scénique remarquable.\n\n**Lien URL :**\n[The Last Band In Town : Hommage à The Clash](https://openagenda.com/shotgun/events/the-last-band-in-town-hommage-a-the-clash)\n\n**Tarif :** À partir de **16,95 €**.",
       "expected_uids": [
         "16718004"
       ],
@@ -106,15 +147,25 @@
       ],
       "hit_rate": 1.0,
       "keyword_recall": 1.0,
-      "semantic_similarity": 0.9276,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.9471,
       "is_correct": true
     },
     {
       "id": "Q06",
       "category": "in_scope",
       "question": "Quel événement autour de la photographie argentique est organisé au Musée Postal ?",
-      "ground_truth": "Le Musée Postal (34 Boulevard de Vaugirard, 75015 Paris) organise une 'Collecte de photographies argentiques' le lundi 15 mars 2027 à 09h30.",
-      "generated_answer": "Voici l'événement autour de la photographie argentique organisé au **Musée Postal** à Paris :\n\n---\n**Titre** : Collecte de photographies argentiques\n**Dates** : Lundi 15 mars 2027, de **09h30 à 18h00**\n**Lieu** : Musée Postal\n**Adresse** : 34 Boulevard de Vaugirard, 75015 Paris, France\n\n**Résumé** :\nLe Musée Postal lance une collecte exceptionnelle de photographies argentiques liées à **La Poste**, ses métiers et ses usages. Particuliers, anciens postiers, photographes ou collectionneurs sont invités à partager leurs archives (tirages, négatifs, diapositives) pour enrichir le patrimoine visuel du musée. Les images sélectionnées pourront intégrer les collections et être valorisées dans des expositions ou des projets de recherche, dans le cadre du **Bicentenaire de la Photographie**.\n\n**Lien** : [Collecte de photographies argentiques](https://openagenda.com/bicentenaire-photographie-fr/events/collecte-de-photographies-argentiques)\n\n---\n*Note* : Pour participer, il est conseillé de contacter le musée avant envoi pour préciser la nature des documents.\n\n---\n*Autre événement lié* :\nSi vous souhaitez explorer des **expositions photographiques**, le Musée Postal propose jusqu’au **20 septembre 2027** :\n**\"Révélations Berry/Gruyaert/Kalvar/Le Querrec/Salgado/...\"** (liée à l’histoire de La Poste et à l’ère argentique).\n[Plus d'infos ici](https://openagenda.com/bicentenaire-photographie-fr/events/revelations-1991).",
+      "ground_truth": "Le Musée Postal (34 Boulevard de Vaugirard, 75015 Paris) organise une 'Collecte de photographies argentiques' le lundi 15 mars 2027 à 09h30. Lien : https://openagenda.com/bicentenaire-photographie-fr/events/collecte-de-photographies-argentiques",
+      "generated_answer": "Voici l'événement organisé au **Musée Postal** autour de la photographie argentique :\n\n---\n**Titre** : Collecte de photographies argentiques\n**Dates et horaires** : Lundi 15 mars 2027, de **08h30 à 18h00**\n**Lieu** : Musée Postal\n**Adresse** : 34 Boulevard de Vaugirard, 75015 Paris, France\n\n**Résumé** :\nDans le cadre du Bicentenaire de la Photographie, le Musée Postal lance une collecte de photographies argentiques dédiées à **La Poste**, ses métiers et ses usages. Particuliers, anciens postiers, photographes ou collectionneurs sont invités à partager leurs archives (tirages, négatifs, diapos) témoignant de l’histoire sociale, technique et culturelle de La Poste. Les documents sélectionnés pourront intégrer les collections du musée et être valorisés dans des expositions ou publications.\n\n**Lien** : [Collecte de photographies argentiques](https://openagenda.com/bicentenaire-photographie-fr/events/collecte-de-photographies-argentiques)\n\n---\n*Note* : Cet événement est une **collecte ponctuelle** (uniquement le 15 mars 2027). Pour une exposition permanente liée à la photographie argentique, consultez aussi :\n---\n**Titre** : *Révélations Berry/Gruyaert/Kalvar/Le Querrec/Salgado/...*\n**Dates** : Du 10 mars au 20 septembre 2027\n**Lieu** : Musée Postal (même adresse)\n**Résumé** : Exposition de photographies réalisées par des membres de **Magnum Photos** en 1991, documentant la transformation de La Poste en établissement public. L’exposition inclut des tirages de presse et des objets matériels liés à la circulation de l’image argentique.\n\n**Lien** : [Révélations 1991](https://openagenda.com/bicentenaire-photographie-fr/events/revelations-1991)",
       "expected_uids": [
         "46224204"
       ],
@@ -124,15 +175,25 @@
       ],
       "hit_rate": 1.0,
       "keyword_recall": 1.0,
-      "semantic_similarity": 0.9105,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.937,
       "is_correct": true
     },
     {
       "id": "Q07",
       "category": "in_scope",
       "question": "Quels concerts mêlant jazz et musique brésilienne me conseilles-tu à Paris ?",
-      "ground_truth": "La 'Soirée Brasil e Jazz !' a lieu au JASS CLUB (141 Rue de Tolbiac, 75013 Paris) le samedi 28 novembre à 19h30 et 21h30 (tarifs de 10€ à 19€), suivie d'une jam session à 22h30.",
-      "generated_answer": "Voici les événements de la base **Puls-Events** qui correspondent à votre demande pour des concerts mêlant **jazz et musique brésilienne** à Paris :\n\n---\n\n### **1. Soirée ‘Brasil e Jazz’ !**\n- **Dates / Horaires** : Samedi 28 novembre 2026, à **19h30** et **21h30**\n- **Lieu** : JASS CLUB\n  *Adresse* : 141 Rue de Tolbiac, 75013 Paris\n- **Résumé** :\n  Une rencontre musicale exceptionnelle où quatre artistes explorent le dialogue entre **jazz et musiques brésiliennes** (samba, choro, bossa nova, etc.). Le programme inclut des improvisations et des partages d’influences, avec :\n  - **Yoorim Won** (flûte)\n  - **Henrique Mota** (piano, brésilien)\n  - **Gabriel Pierre** (contrebasse)\n  - **Jean-Baptiste Loutte** (batterie, voix).\n  *Tarifs* : 10€ (offre limitée), 15€ (réduit), 19€ (standard).\n  **Lien** : [Soirée ‘Brasil e Jazz’](https://openagenda.com/jassclub-paris/events/soiree-brasil-e-jazz)\n\n---\n\n### **2. Jam session ‘Brasil e Jazz’ / par Jean-Baptiste Loutte**\n- **Date / Horaire** : Samedi 28 novembre 2026, à **22h30**\n- **Lieu** : JASS CLUB\n  *Adresse* : 141 Rue de Tolbiac, 75013 Paris\n- **Résumé** :\n  Une **jam session ouverte à tous** pour prolonger l’énergie de la soirée. Animée par Jean-Baptiste Loutte, cette session permet aux musiciens (et au public) de s’improviser autour des musiques brésiliennes et du jazz. *Piano, contrebasse et batterie disponibles sur scène*.\n  **Tarif** : 5€ en prévente (places limitées).\n  **Lien** : [Jam session ‘Brasil e Jazz’](https://openagenda.com/jassclub-paris/events/jam-session-brazil-e-jazz-par-jean-baptiste-loutte)\n\n---\n\nCes deux événements se déroulent **le même jour au JASS CLUB**, avec une programmation conçue pour célébrer les échanges entre jazz et musiques brésiliennes. Si vous souhaitez une expérience immersive, je vous conseille de combiner les deux sessions !",
+      "ground_truth": "La 'Soirée Brasil e Jazz !' a lieu au JASS CLUB (141 Rue de Tolbiac, 75013 Paris) le samedi 28 novembre à 19h30 et 21h30 (tarifs de 10€ à 19€). Lien : https://openagenda.com/jassclub-paris/events/soiree-brasil-e-jazz",
+      "generated_answer": "Voici les événements que je recommande pour découvrir un mélange de jazz et musique brésilienne à Paris :\n\n---\n\n**Soirée ‘Brasil e Jazz’ !**\n- **Dates et horaires** : Samedi 28 novembre 2026, à **19h30** et **21h30**\n- **Lieu** : JASS CLUB – 141 Rue de Tolbiac, 75013 Paris\n- **Résumé** : Une rencontre musicale entre quatre artistes passionnés par les musiques brésiliennes. Jean-Baptiste Loutte (chant et batterie), Yoorim Won (flûte), Henrique Mota (piano) et Gabriel Pierre (contrebasse) explorent un répertoire varié, allant du samba au choro, en passant par la bossa nova et les musiques brésiliennes contemporaines. Le concert sera suivi d’une **jam session ouverte au public**.\n- **Tarifs** : 10€ (offre limitée), 15€ (tarif réduit), 19€ (tarif standard).\n- **Lien** : [Soirée ‘Brasil e Jazz’ !](https://openagenda.com/jassclub-paris/events/soiree-brasil-e-jazz)\n\n---\n\n**Jam session 'Brasil e Jazz' / par Jean-Baptiste Loutte**\n- **Date et heure** : Samedi 28 novembre 2026, à **22h30**\n- **Lieu** : JASS CLUB – 141 Rue de Tolbiac, 75013 Paris\n- **Résumé** : Une **jam session** animée par Jean-Baptiste Loutte, où artistes émergents et confirmés se retrouvent pour improviser et créer ensemble. Un moment convivial où naissent des collaborations musicales, avec piano à queue, contrebasse et batterie sur scène. **Entrée libre** (préventes limitées à 5€).\n- **Lien** : [Jam session 'Brasil e Jazz'](https://openagenda.com/jassclub-paris/events/jam-session-brazil-e-jazz-par-jean-baptiste-loutte)\n\n---\nCes deux événements se déroulent le même jour au JASS CLUB et offrent une immersion complète dans l’univers fusion jazz/musique brésilienne.",
       "expected_uids": [
         "11001701"
       ],
@@ -142,15 +203,25 @@
       ],
       "hit_rate": 1.0,
       "keyword_recall": 1.0,
-      "semantic_similarity": 0.9005,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.9144,
       "is_correct": true
     },
     {
       "id": "Q08",
       "category": "in_scope",
       "question": "Dans quelle salle et à quelle date passe Bardix le Gaulois à Paris ?",
-      "ground_truth": "Bardix le Gaulois se produit à L'Élysée Montmartre (72 Boulevard Marguerite de Rochechouart, 75018 Paris) le samedi 3 avril 2027 à 20h00, avec un tarif à partir de 33.99 €.",
-      "generated_answer": "D'après les événements disponibles dans la base Puls-Events, **Bardix le Gaulois** passe à Paris lors des dates suivantes :\n\n1. **La Maroquinerie** (23 Rue Boyer, 75020 Paris)\n   - **Jeudi 26 novembre 2026 à 20h00**\n   - [Lien pour plus d'informations](https://openagenda.com/shotgun/events/bardix-le-gaulois-la-maroquinerie)\n\n2. **L'Élysée Montmartre** (72 Boulevard Marguerite de Rochechouart, 75018 Paris)\n   - **Samedi 3 avril 2027 à 20h00** *(prochain événement dans la base)*\n\nAucun autre passage de Bardix le Gaulois n'est prévu à Paris avant ces dates.",
+      "ground_truth": "Bardix le Gaulois se produit à L'Élysée Montmartre (72 Boulevard Marguerite de Rochechouart, 75018 Paris) le samedi 3 avril 2027 à 20h00, à partir de 33.99 €. Lien : https://openagenda.com/shotgun/events/bardix-le-gaulois-lelysee-montmartre-paris",
+      "generated_answer": "Voici les deux événements de **Bardix le Gaulois** disponibles dans notre base Puls-Events pour Paris :\n\n---\n\n### 1. **Bardix le Gaulois - La Maroquinerie**\n- **Date et heure** : Jeudi 26 novembre 2026, à partir de **19h00** (ouverture des portes) – spectacle à **20h00**\n- **Lieu** : **La Maroquinerie**\n  **Adresse** : 23 Rue Boyer, 75020 Paris, France\n- **Résumé** : Une soirée techno où se mêlent rythmes tribaux, instruments celtiques et énergie rave, dans une cérémonie sauvage et épique. Le \"Feu Sacré\" s’apprête à embraser la capitale.\n- **Tarif** : À partir de **25,99 €**\n- **Lien** : [https://openagenda.com/shotgun/events/bardix-le-gaulois-la-maroquinerie](https://openagenda.com/shotgun/events/bardix-le-gaulois-la-maroquinerie)\n\n---\n\n### 2. **Bardix le Gaulois @ L'Élysée Montmartre**\n- **Date et heure** : **Samedi 3 avril 2027**, de **18h00 à 21h00** (soirée à partir de 20h00)\n- **Lieu** : **L'Élysée Montmartre**\n  **Adresse** : 72 Boulevard Marguerite de Rochechouart, 75018 Paris, France\n- **Résumé** : Une soirée inédite où techno et mélodies celtiques se rencontrent, avec danses collectives et surprises pour un grand rassemblement gaulois.\n- **Tarif** : À partir de **33,99 €**\n- **Lien** : [https://openagenda.com/shotgun/events/bardix-le-gaulois-lelysee-montmartre-paris](https://openagenda.com/shotgun/events/bardix-le-gaulois-lelysee-montmartre-paris)\n\n---\n*Aucun autre passage de Bardix le Gaulois n'est prévu à Paris avant ces dates.*",
       "expected_uids": [
         "62786624"
       ],
@@ -161,7 +232,17 @@
       ],
       "hit_rate": 1.0,
       "keyword_recall": 1.0,
-      "semantic_similarity": 0.8776,
+      "fact_score": 1.0,
+      "fact_checks": {
+        "title_ok": true,
+        "date_ok": true,
+        "location_ok": true,
+        "url_ok": true,
+        "no_forbidden_claims": true,
+        "fact_score": 1.0,
+        "all_valid": true
+      },
+      "semantic_similarity": 0.8895,
       "is_correct": true
     },
     {
@@ -169,7 +250,7 @@
       "category": "out_of_scope",
       "question": "Quels concerts ou festivals me recommandes-tu à Lyon ce week-end ?",
       "ground_truth": "Je ne dispose d'aucun événement correspondant à Lyon dans la base Puls-Events, qui couvre uniquement les événements culturels situés à Paris.",
-      "generated_answer": "Je ne dispose d'aucun événement culturel à Lyon dans la base Puls-Events pour cette période. Je peux cependant te proposer des recommandations à **Paris** si tu le souhaites ! 😊",
+      "generated_answer": "Je ne dispose d'aucun événement culturel à Lyon dans ma base Puls-Events.",
       "expected_uids": [],
       "retrieved_uids": [
         "72380416",
@@ -180,15 +261,17 @@
       ],
       "hit_rate": null,
       "keyword_recall": null,
-      "semantic_similarity": 0.9595,
+      "fact_score": null,
+      "fact_checks": null,
+      "semantic_similarity": 0.9655,
       "is_correct": true
     },
     {
       "id": "Q10",
       "category": "out_of_scope",
       "question": "Peux-tu me donner la recette traditionnelle de la pâte à crêpes ?",
-      "ground_truth": "Je suis l'assistant Puls-Events dédié uniquement à la recommandation d'événements culturels à Paris et je ne peux pas répondre à cette demande hors périmètre.",
-      "generated_answer": "Je ne dispose pas d'événements ou d'informations concernant des recettes traditionnelles dans ma base Puls-Events. Je ne peux donc pas vous fournir la recette de la pâte à crêpes, mais je peux vous recommander un événement culturel lié à la cuisine ou aux ateliers culinaires si vous le souhaitez.\n\nCependant, voici un événement proche de votre demande :\n**Atelier \"Lait aux épices, la potion du soir\"** (bien que ce ne soit pas une recette de crêpes, il s'agit d'un atelier culinaire et créatif pour enfants) :\n- **Titre** : Atelier \"Lait aux épices, la potion du soir\"\n- **Dates** : Samedi 16 janvier 2027, de 16h00 à 16h30\n- **Lieu** : 45 Rue Bichat, 75010 Paris\n- **Résumé** : Un atelier sensoriel et créatif pour découvrir les épices à travers des mélanges et des histoires.\n- **Lien** : [Lien vers l'événement](https://openagenda.com/econature/events/atelier-lait-aux-epices-la-potion-du-soir)\n\nSi vous cherchez une activité culinaire plus proche de la pâte à crêpes, je ne peux malheureusement pas vous proposer d'événement correspondant dans ma base actuelle.",
+      "ground_truth": "Je ne dispose d'aucun événement correspondant à cette demande hors périmètre : Puls-Events est dédié uniquement à la recommandation d'événements culturels à Paris.",
+      "generated_answer": "Je ne dispose d'aucun événement ou contenu lié à une recette de cuisine dans ma base Puls-Events. Je ne peux donc pas vous fournir cette information.",
       "expected_uids": [],
       "retrieved_uids": [
         "11635985",
@@ -198,7 +281,30 @@
       ],
       "hit_rate": null,
       "keyword_recall": null,
-      "semantic_similarity": 0.8396,
+      "fact_score": null,
+      "fact_checks": null,
+      "semantic_similarity": 0.883,
+      "is_correct": true
+    },
+    {
+      "id": "Q11",
+      "category": "out_of_scope",
+      "question": "Quel hôtel pas cher me conseilles-tu près de la gare de Lyon à Paris ?",
+      "ground_truth": "Je ne dispose d'aucun hébergement ou hôtel correspondant dans la base Puls-Events, qui recense uniquement des événements culturels à Paris.",
+      "generated_answer": "Je ne dispose d'aucun événement ou information concernant des hôtels ou hébergements dans ma base Puls-Events. Je ne peux donc pas vous recommander d'hôtel pas cher près de la gare de Lyon.",
+      "expected_uids": [],
+      "retrieved_uids": [
+        "56860814",
+        "96238317",
+        "77464889",
+        "22994994",
+        "57023317"
+      ],
+      "hit_rate": null,
+      "keyword_recall": null,
+      "fact_score": null,
+      "fact_checks": null,
+      "semantic_similarity": 0.9034,
       "is_correct": true
     }
   ]

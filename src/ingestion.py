@@ -1,5 +1,6 @@
-﻿import json
+import json
 import logging
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
@@ -50,6 +51,7 @@ def fetch_openagenda_events(
     max_events: int = MAX_EVENTS,
 ) -> List[Dict[str, Any]]:
     """Récupère les événements depuis l'API Open Agenda par pagination déterministe."""
+    t0 = time.perf_counter()
     where_clause = build_odsql_where_clause(
         city=city,
         reference_date=reference_date,
@@ -93,6 +95,8 @@ def fetch_openagenda_events(
         if len(results) < limit:
             break
 
+    elapsed = time.perf_counter() - t0
+    logger.info(f"Extraction terminée : {len(all_records)} événements en {elapsed:.2f} s.")
     return all_records
 
 

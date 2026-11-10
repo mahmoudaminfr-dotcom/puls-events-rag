@@ -1,4 +1,4 @@
-﻿"""
+"""
 Module de découpage (chunking), vectorisation et gestion de l'index FAISS.
 Transforme les événements nettoyés en vecteurs sémantiques via Mistral AI.
 """
@@ -7,27 +7,26 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_mistralai import MistralAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_mistralai import MistralAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 import src.config as config
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-MISTRAL_API_KEY = getattr(config, "MISTRAL_API_KEY", None)
-MISTRAL_EMBED_MODEL = getattr(config, "MISTRAL_EMBED_MODEL", "mistral-embed")
+MISTRAL_EMBED_MODEL = getattr(config, "EMBEDDING_MODEL", "mistral-embed")
 PROCESSED_DATA_DIR = getattr(config, "PROCESSED_DATA_DIR", Path("data/processed"))
 FAISS_INDEX_DIR = getattr(config, "FAISS_INDEX_DIR", Path("data/faiss_index"))
 CHUNK_SIZE = getattr(config, "CHUNK_SIZE", 800)
-CHUNK_OVERLAP = getattr(config, "CHUNK_OVERLAP", 150)
+CHUNK_OVERLAP = getattr(config, "CHUNK_OVERLAP", 120)
 
 CLEANED_JSON_PATH = PROCESSED_DATA_DIR / "events_cleaned.json"
 BATCH_SIZE = 100
@@ -39,7 +38,7 @@ def load_cleaned_events(filepath: Path = CLEANED_JSON_PATH) -> List[Dict[str, An
     if not filepath.exists():
         raise FileNotFoundError(f"Fichier introuvable : {filepath}")
 
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8-sig") as f:
         events = json.load(f)
 
     logger.info(f"{len(events)} événements chargés depuis {filepath.name}.")
@@ -55,6 +54,7 @@ def create_chunks(
     Découpe le texte combiné de chaque événement en objets Document LangChain
     tout en conservant les métadonnées critiques dans chaque chunk.
     """
+    t0 = time.perf_counter()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -106,8 +106,9 @@ def create_chunks(
                 Document(page_content=page_content, metadata=chunk_metadata)
             )
 
+    elapsed = time.perf_counter() - t0
     logger.info(
-        f"Découpage terminé : {len(events)} événements -> {len(documents)} chunks générés "
+        f"Découpage terminé en {elapsed:.3f} s : {len(events)} événements -> {len(documents)} chunks "
         f"(chunk_size={chunk_size}, chunk_overlap={chunk_overlap})."
     )
     return documents
@@ -121,15 +122,17 @@ def build_and_save_faiss_index(
     """
     Vectorise les documents par lots via MistralAIEmbeddings et sauvegarde l'index FAISS.
     """
-    if not MISTRAL_API_KEY:
+    api_key = getattr(config, "MISTRAL_API_KEY", None)
+    if not api_key or api_key == "your_mistral_api_key_here":
         raise ValueError("MISTRAL_API_KEY est manquante dans la configuration.")
 
     if not documents:
         raise ValueError("La liste de documents à indexer est vide.")
 
+    t0 = time.perf_counter()
     embeddings = MistralAIEmbeddings(
         model=MISTRAL_EMBED_MODEL,
-        api_key=MISTRAL_API_KEY,
+        api_key=api_key,
     )
 
     total_docs = len(documents)
@@ -145,17 +148,28 @@ def build_and_save_faiss_index(
 
         logger.info(f"Vectorisation du lot {start_idx + 1} à {end_idx} / {total_docs}...")
 
-        if vector_store is None:
-            vector_store = FAISS.from_documents(batch, embeddings)
-        else:
-            vector_store.add_documents(batch)
+        for attempt in range(1, 5):
+            try:
+                if vector_store is None:
+                    vector_store = FAISS.from_documents(batch, embeddings)
+                else:
+                    vector_store.add_documents(batch)
+                break
+            except Exception as exc:
+                if "429" in str(exc) and attempt < 4:
+                    wait_s = 15.0 * attempt
+                    logger.warning(f"Quota Mistral Embeddings (429). Pause de {wait_s:.0f}s...")
+                    time.sleep(wait_s)
+                else:
+                    raise
 
         if end_idx < total_docs:
             time.sleep(BATCH_SLEEP_SECONDS)
 
     index_dir.mkdir(parents=True, exist_ok=True)
     vector_store.save_local(str(index_dir))
-    logger.info(f"Index FAISS sauvegardé avec succès dans : {index_dir}")
+    elapsed = time.perf_counter() - t0
+    logger.info(f"Index FAISS sauvegardé dans {index_dir} en {elapsed:.2f} s.")
 
     return vector_store
 
@@ -168,9 +182,10 @@ def load_faiss_index(index_dir: Path = FAISS_INDEX_DIR) -> FAISS:
             f"Aucun index FAISS trouvé dans {index_dir}. Exécutez d'abord l'indexation."
         )
 
+    api_key = getattr(config, "MISTRAL_API_KEY", None)
     embeddings = MistralAIEmbeddings(
         model=MISTRAL_EMBED_MODEL,
-        api_key=MISTRAL_API_KEY,
+        api_key=api_key or "offline_placeholder",
     )
 
     vector_store = FAISS.load_local(

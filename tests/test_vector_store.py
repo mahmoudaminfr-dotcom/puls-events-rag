@@ -1,20 +1,27 @@
-﻿"""
-Tests unitaires pour le module de vectorisation et l'index FAISS.
-Vérifie le découpage en chunks, la dimension des vecteurs et la recherche sémantique.
+"""
+Tests pour le module de vectorisation et l'index FAISS.
+Sépare le test unitaire hors-ligne (chunking) des tests d'intégration (FAISS + Mistral API).
 """
 
 import pytest
+
+import src.config as config
 from src.vector_store import FAISS_INDEX_DIR, create_chunks, load_faiss_index
+
+HAS_FAISS_INDEX = (FAISS_INDEX_DIR / "index.faiss").exists() and (FAISS_INDEX_DIR / "index.pkl").exists()
+HAS_MISTRAL_KEY = bool(config.MISTRAL_API_KEY) and config.MISTRAL_API_KEY != "your_mistral_api_key_here"
 
 
 @pytest.fixture(scope="module")
 def faiss_store():
-    """Charge l'index FAISS une seule fois pour tous les tests du module."""
+    """Charge l'index FAISS une seule fois pour les tests d'intégration."""
+    if not HAS_FAISS_INDEX:
+        pytest.skip("Index FAISS absent (exécutez : python -m src.vector_store).")
     return load_faiss_index(FAISS_INDEX_DIR)
 
 
 def test_chunking_with_context_header():
-    """Vérifie qu'un texte long est découpé et que le 2e chunk reçoit l'en-tête de rappel."""
+    """Vérifie hors-ligne qu'un texte long est découpé et reçoit son en-tête et ses métadonnées."""
     long_text = "Titre : Festival Test\nVille : Paris\nDescription : " + ("Concert de musique. " * 80)
     fake_events = [
         {
@@ -39,12 +46,14 @@ def test_chunking_with_context_header():
     assert chunks[1].metadata["city"] == "Paris"
 
 
+@pytest.mark.integration
 def test_faiss_files_exist():
     """Vérifie que les fichiers binaires de l'index FAISS existent sur le disque."""
     assert (FAISS_INDEX_DIR / "index.faiss").exists(), "Le fichier index.faiss est manquant."
     assert (FAISS_INDEX_DIR / "index.pkl").exists(), "Le fichier index.pkl est manquant."
 
 
+@pytest.mark.integration
 def test_faiss_index_dimensions_and_count(faiss_store):
     """Vérifie le nombre de vecteurs indexés (>= 1000) et la dimension Mistral (1024)."""
     assert faiss_store.index.ntotal >= 1000, (
@@ -55,6 +64,8 @@ def test_faiss_index_dimensions_and_count(faiss_store):
     )
 
 
+@pytest.mark.integration
+@pytest.mark.skipif(not HAS_MISTRAL_KEY, reason="MISTRAL_API_KEY requise pour vectoriser la requête.")
 def test_semantic_similarity_search(faiss_store):
     """Teste une recherche sémantique réelle et vérifie la structure des résultats."""
     query = "Concert de musique jazz ou exposition culturelle à Paris"

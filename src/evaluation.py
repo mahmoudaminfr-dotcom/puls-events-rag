@@ -1,14 +1,16 @@
-﻿"""
+"""
 Module d'évaluation quantitative et qualitative du système RAG Puls-Events.
-Calcule le Hit Rate @ K (Retrieval), le rappel des mots-clés, la similarité cosinus
-sémantique (Mistral Embeddings) et le respect des garde-fous hors périmètre.
+Calcule le Hit Rate @ K (Retrieval), l'exactitude des faits clés (titre, date, lieu, URL),
+le rappel des mots-clés, la similarité cosinus sémantique et la rigueur des refus.
 """
 
 import json
 import logging
+import re
 import time
+import unicodedata
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -19,30 +21,44 @@ from src.rag_engine import PulsEventsRAG
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-MISTRAL_API_KEY = getattr(config, "MISTRAL_API_KEY", None)
-MISTRAL_EMBED_MODEL = getattr(config, "MISTRAL_EMBED_MODEL", "mistral-embed")
+MISTRAL_EMBED_MODEL = getattr(config, "EMBEDDING_MODEL", "mistral-embed")
 
 EVAL_DIR = Path("data/evaluation")
 TEST_DATASET_PATH = EVAL_DIR / "test_dataset.json"
 RESULTS_JSON_PATH = EVAL_DIR / "evaluation_results.json"
 RESULTS_CSV_PATH = EVAL_DIR / "evaluation_summary.csv"
 
-REFUSAL_INDICATORS = [
-    "aucun",
-    "ne dispose",
-    "pas d'événement",
-    "ne figure",
-    "ne correspond",
-    "uniquement",
-    "paris",
-    "désolé",
-    "hors périmètre",
-    "ne peux pas",
+# Formules explicites de refus (sans mots ambigus tels que "paris" ou "uniquement")
+REFUSAL_PHRASES = [
+    "ne dispose d'aucun",
+    "ne dispose pas",
+    "aucun evenement",
+    "pas d'evenement",
+    "ne figure pas",
+    "aucun resultat",
+    "hors perimetre",
+    "hors de mon perimetre",
+    "ne peux pas repondre",
+    "ne peux pas vous fournir",
+    "ne suis pas en mesure",
+    "impossible de repondre",
 ]
+
+
+def normalize_text(text: str) -> str:
+    """Normalise un texte (minuscules, sans accents, ligatures ni ponctuation) pour comparaison fiable."""
+    if not text:
+        return ""
+    text = text.lower().replace("œ", "oe").replace("æ", "ae")
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = re.sub(r"['’‘`\-–—_|,:;!?()\[\]*\"«»@]", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 
 def compute_cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
@@ -57,18 +73,74 @@ def compute_cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
 
 
 def check_refusal(answer: str) -> bool:
-    """Vérifie si la réponse contient une formule de refus pour les questions hors périmètre."""
+    """
+    Vérifie si la réponse constitue un vrai refus hors périmètre :
+    - présence d'une expression explicite de refus (sans faux positif sur 'Paris' ou 'uniquement') ;
+    - absence de lien d'événement Open Agenda recommandé en substitution.
+    """
+    if not answer or not answer.strip():
+        return False
     answer_lower = answer.lower()
-    return any(indicator in answer_lower for indicator in REFUSAL_INDICATORS)
+    if "openagenda.com/" in answer_lower:
+        return False
+
+    norm_refusal = answer_lower.replace("œ", "oe").replace("’", "'").replace("‘", "'")
+    norm_refusal = unicodedata.normalize("NFD", norm_refusal)
+    norm_refusal = "".join(ch for ch in norm_refusal if unicodedata.category(ch) != "Mn")
+    norm_refusal = re.sub(r"\s+", " ", norm_refusal).strip()
+
+    return any(phrase in norm_refusal for phrase in REFUSAL_PHRASES)
 
 
 def compute_keyword_recall(answer: str, expected_keywords: List[str]) -> float:
-    """Calcule la proportion de mots-clés attendus présents dans la réponse générée."""
+    """Calcule la proportion de mots-clés attendus présents dans la réponse normalisée."""
     if not expected_keywords:
         return 1.0
-    answer_lower = answer.lower()
-    matches = sum(1 for kw in expected_keywords if kw.lower() in answer_lower)
+    norm_answer = normalize_text(answer)
+    matches = sum(1 for kw in expected_keywords if normalize_text(kw) in norm_answer)
     return round(matches / len(expected_keywords), 4)
+
+
+def evaluate_key_facts(
+    answer: str,
+    expected_facts: Dict[str, str],
+    forbidden_claims: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Vérifie la présence des 4 faits clés obligatoires (titre, date, lieu, lien URL)
+    et l'absence d'affirmations contradictoires ou d'amalgames (forbidden_claims).
+    """
+    norm_answer = normalize_text(answer)
+    answer_lower = (answer or "").lower()
+    forbidden_claims = forbidden_claims or []
+
+    title_val = expected_facts.get("title", "")
+    date_val = expected_facts.get("date", "")
+    location_val = expected_facts.get("location", "")
+    url_val = expected_facts.get("url", "")
+
+    title_ok = bool(title_val) and (normalize_text(title_val) in norm_answer)
+    date_ok = bool(date_val) and (normalize_text(date_val) in norm_answer)
+    location_ok = bool(location_val) and (normalize_text(location_val) in norm_answer)
+    url_ok = bool(url_val) and (url_val.strip().lower() in answer_lower)
+    no_forbidden = not any(
+        normalize_text(claim) in norm_answer for claim in forbidden_claims if claim
+    )
+
+    fact_score = round(
+        (int(title_ok) + int(date_ok) + int(location_ok) + int(url_ok)) / 4.0, 4
+    )
+    all_valid = title_ok and date_ok and location_ok and url_ok and no_forbidden
+
+    return {
+        "title_ok": title_ok,
+        "date_ok": date_ok,
+        "location_ok": location_ok,
+        "url_ok": url_ok,
+        "no_forbidden_claims": no_forbidden,
+        "fact_score": fact_score,
+        "all_valid": all_valid,
+    }
 
 
 def run_evaluation(
@@ -79,17 +151,23 @@ def run_evaluation(
     if not dataset_path.exists():
         raise FileNotFoundError(f"Jeu de test introuvable : {dataset_path}")
 
+    api_key = getattr(config, "MISTRAL_API_KEY", None)
+    if not api_key or api_key == "your_mistral_api_key_here":
+        raise ValueError("MISTRAL_API_KEY est manquante dans la configuration.")
+
     with open(dataset_path, "r", encoding="utf-8-sig") as f:
         test_cases = json.load(f)
 
     rag = PulsEventsRAG(top_k=top_k)
     embeddings_model = MistralAIEmbeddings(
         model=MISTRAL_EMBED_MODEL,
-        api_key=MISTRAL_API_KEY,
+        api_key=api_key,
     )
 
     raw_runs = []
-    logger.info(f"Démarrage de l'évaluation RAG sur {len(test_cases)} questions (top_k={top_k})...")
+    logger.info(
+        f"Démarrage de l'évaluation RAG sur {len(test_cases)} questions (top_k={top_k})..."
+    )
 
     for idx, item in enumerate(test_cases, start=1):
         q_id = item["id"]
@@ -128,6 +206,8 @@ def run_evaluation(
         retrieved_uids = run["retrieved_uids"]
         expected_uids = [str(u) for u in item.get("expected_uids", [])]
         expected_keywords = item.get("expected_keywords", [])
+        expected_facts = item.get("expected_facts", {})
+        forbidden_claims = item.get("forbidden_claims", [])
 
         semantic_sim = round(
             compute_cosine_similarity(gt_vectors[idx], gen_vectors[idx]), 4
@@ -136,10 +216,21 @@ def run_evaluation(
         if category == "in_scope":
             hit_rate = 1.0 if any(uid in retrieved_uids for uid in expected_uids) else 0.0
             kw_recall = compute_keyword_recall(generated_answer, expected_keywords)
-            is_correct = (hit_rate == 1.0) and (semantic_sim >= 0.70)
+            fact_checks = evaluate_key_facts(
+                generated_answer, expected_facts, forbidden_claims
+            )
+            fact_score = fact_checks["fact_score"]
+            is_correct = (
+                hit_rate == 1.0
+                and fact_checks["all_valid"]
+                and not check_refusal(generated_answer)
+                and semantic_sim >= 0.70
+            )
         else:
             hit_rate = None
             kw_recall = None
+            fact_checks = None
+            fact_score = None
             is_correct = check_refusal(generated_answer)
 
         detailed_results.append(
@@ -153,6 +244,8 @@ def run_evaluation(
                 "retrieved_uids": retrieved_uids,
                 "hit_rate": hit_rate,
                 "keyword_recall": kw_recall,
+                "fact_score": fact_score,
+                "fact_checks": fact_checks,
                 "semantic_similarity": semantic_sim,
                 "is_correct": is_correct,
             }
@@ -170,6 +263,9 @@ def run_evaluation(
         ),
         "mean_keyword_recall": round(
             float(np.mean([r["keyword_recall"] for r in in_scope_items])), 4
+        ),
+        "mean_fact_score": round(
+            float(np.mean([r["fact_score"] for r in in_scope_items])), 4
         ),
         "mean_semantic_similarity_in_scope": round(
             float(np.mean([r["semantic_similarity"] for r in in_scope_items])), 4
@@ -200,6 +296,7 @@ def run_evaluation(
                 "id": r["id"],
                 "category": r["category"],
                 "hit_rate": r["hit_rate"],
+                "fact_score": r["fact_score"],
                 "keyword_recall": r["keyword_recall"],
                 "semantic_similarity": r["semantic_similarity"],
                 "is_correct": r["is_correct"],
@@ -222,6 +319,7 @@ if __name__ == "__main__":
     print("=" * 80)
     print(f" - Questions évaluées              : {m['total_questions']} ({m['in_scope_count']} in-scope, {m['out_of_scope_count']} out-of-scope)")
     print(f" - Hit Rate @ 5 (Retrieval FAISS)  : {m['retrieval_hit_rate_at_k'] * 100:.1f}%")
+    print(f" - Exactitude des faits clés (4/4) : {m['mean_fact_score'] * 100:.1f}%")
     print(f" - Rappel moyen des mots-clés      : {m['mean_keyword_recall'] * 100:.1f}%")
     print(f" - Similarité sémantique (in-scope): {m['mean_semantic_similarity_in_scope']:.4f}")
     print(f" - Garde-fou hors périmètre        : {m['out_of_scope_guardrail_accuracy'] * 100:.1f}%")

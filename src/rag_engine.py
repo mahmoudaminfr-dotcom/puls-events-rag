@@ -1,45 +1,46 @@
-﻿"""
+"""
 Moteur RAG (Retrieval-Augmented Generation) pour la recommandation d'événements Puls-Events.
 Combine la recherche vectorielle FAISS et la génération via Mistral AI.
 """
 
 import logging
 import time
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_mistralai import ChatMistralAI
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_mistralai import ChatMistralAI
 
 import src.config as config
-from src.vector_store import load_faiss_index, FAISS_INDEX_DIR
+from src.vector_store import FAISS_INDEX_DIR, load_faiss_index
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 MISTRAL_API_KEY = getattr(config, "MISTRAL_API_KEY", None)
-MISTRAL_CHAT_MODEL = getattr(config, "MISTRAL_CHAT_MODEL", "open-mistral-nemo")
+MISTRAL_CHAT_MODEL = getattr(config, "LLM_MODEL", "open-mistral-nemo")
 REFERENCE_DATE = getattr(config, "REFERENCE_DATE", "2026-11-05")
-DEFAULT_TOP_K = getattr(config, "TOP_K", 5)
+DEFAULT_TOP_K = getattr(config, "RETRIEVER_K", 5)
 
 SYSTEM_PROMPT = """Tu es l'assistant virtuel officiel de Puls-Events, spécialisé dans la recommandation d'événements culturels à Paris.
 La date de référence actuelle est le {reference_date}.
 
 RÈGLES STRICTES :
-1. Réponds UNIQUEMENT à partir des événements fournis dans le bloc [CONTEXTE] ci-dessous.
-2. N'invente JAMAIS d'événement, de date, d'adresse, de tarif ou de lien qui ne figure pas explicitement dans le [CONTEXTE].
-3. Si aucun événement du [CONTEXTE] ne correspond à la demande de l'utilisateur (ou si la demande concerne une autre ville que Paris ou un sujet hors périmètre), indique poliment que tu ne disposes d'aucun événement correspondant dans la base Puls-Events.
-4. Pour chaque événement recommandé, mentionne clairement :
+1. Réponds UNIQUEMENT à partir des événements fournis dans le bloc [CONTEXTE] ci-dessous, sans utiliser aucune connaissance externe.
+2. N'invente JAMAIS d'événement, de date, d'adresse, de tarif ou de lien URL.
+3. ISOLATION DES FICHES : ne mélange JAMAIS les informations (compositeurs, artistes, œuvres au programme, dates, lieux ou tarifs) provenant de deux blocs DOCUMENT différents. Décris chaque événement uniquement avec les éléments figurant dans son propre bloc DOCUMENT.
+4. DEMANDES HORS PÉRIMÈTRE : si la demande porte sur une autre ville que Paris, sur un sujet non culturel ou non événementiel (recette de cuisine, hébergement/hôtel, météo, transport), ou si aucun événement du [CONTEXTE] ne correspond réellement à la recherche, réponds uniquement par un refus court et poli indiquant que tu ne disposes d'aucun événement correspondant dans la base Puls-Events. Ne propose AUCUN événement de substitution approximatif ni aucun lien URL dans ce cas.
+5. STRUCTURE OBLIGATOIRE : pour CHAQUE événement recommandé (même si tu en cites plusieurs), mentionne obligatoirement :
    - Le titre exact de l'événement
-   - Les dates / horaires
-   - Le nom du lieu et l'adresse
-   - Un bref résumé pertinent par rapport à la question
-   - Le lien URL s'il est disponible
+   - Les dates et horaires exacts
+   - Le nom du lieu et l'adresse complète
+   - Un bref résumé strictement fidèle au programme de cet événement
+   - Le lien URL complet tel qu'affiché dans le champ URL du document
 
 [CONTEXTE]
 {context}
@@ -77,7 +78,8 @@ class PulsEventsRAG:
         top_k: int = DEFAULT_TOP_K,
         temperature: float = 0.1,
     ):
-        if not MISTRAL_API_KEY:
+        api_key = getattr(config, "MISTRAL_API_KEY", None)
+        if not api_key or api_key == "your_mistral_api_key_here":
             raise ValueError("MISTRAL_API_KEY est manquante dans la configuration.")
 
         self.vector_store = vector_store or load_faiss_index(FAISS_INDEX_DIR)
@@ -85,7 +87,7 @@ class PulsEventsRAG:
 
         self.llm = ChatMistralAI(
             model=MISTRAL_CHAT_MODEL,
-            api_key=MISTRAL_API_KEY,
+            api_key=api_key,
             temperature=temperature,
             max_retries=1,
         )
@@ -122,7 +124,8 @@ class PulsEventsRAG:
                 if "429" in str(exc) and attempt < max_attempts:
                     wait_time = 15.0 * attempt
                     logger.warning(
-                        f"Quota Mistral par minute atteint (429). Pause de {wait_time:.0f}s (tentative {attempt}/{max_attempts})..."
+                        f"Quota Mistral par minute atteint (429). Pause de {wait_time:.0f}s "
+                        f"(tentative {attempt}/{max_attempts})..."
                     )
                     time.sleep(wait_time)
                 else:
@@ -140,7 +143,6 @@ class PulsEventsRAG:
         retrieved_docs = self.retrieve(question, k=k)
         context_str = format_retrieved_documents(retrieved_docs)
 
-        # Pause de 1.5s entre l'appel Embeddings et l'appel Chat
         time.sleep(1.5)
 
         answer = self._invoke_with_backoff(
@@ -179,7 +181,7 @@ class PulsEventsRAG:
 
 
 if __name__ == "__main__":
-    rag = PulsEventsRAG(top_k=4)
+    rag = PulsEventsRAG(top_k=5)
     sample_question = "Quels concerts de jazz ou de musique brésilienne me conseilles-tu à Paris ?"
     result = rag.ask(sample_question)
 

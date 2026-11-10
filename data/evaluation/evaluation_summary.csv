@@ -1,11 +1,12 @@
-id,category,hit_rate,keyword_recall,semantic_similarity,is_correct,question
-Q01,in_scope,0.0,0.3333,0.822,False,Existe-t-il une exposition gratuite sur la photographie de mode à Paris ?
-Q02,in_scope,1.0,0.6667,0.9229,True,Y a-t-il une exposition qui présente le métier et le travail des archéologues ?
-Q03,in_scope,1.0,0.6667,0.9108,True,Quel concert de musique classique autour de Schumann est programmé à Paris ?
-Q04,in_scope,1.0,1.0,0.9151,True,"Quand et où a lieu le concert de Jazzy Bazz à Paris, et quel est le prix ?"
-Q05,in_scope,1.0,1.0,0.9276,True,Je cherche un concert rock en hommage au groupe The Clash à Paris.
-Q06,in_scope,1.0,1.0,0.9105,True,Quel événement autour de la photographie argentique est organisé au Musée Postal ?
-Q07,in_scope,1.0,1.0,0.9005,True,Quels concerts mêlant jazz et musique brésilienne me conseilles-tu à Paris ?
-Q08,in_scope,1.0,1.0,0.8776,True,Dans quelle salle et à quelle date passe Bardix le Gaulois à Paris ?
-Q09,out_of_scope,,,0.9595,True,Quels concerts ou festivals me recommandes-tu à Lyon ce week-end ?
-Q10,out_of_scope,,,0.8396,True,Peux-tu me donner la recette traditionnelle de la pâte à crêpes ?
+id,category,hit_rate,fact_score,keyword_recall,semantic_similarity,is_correct,question
+Q01,in_scope,0.0,0.0,0.3333,0.8566,False,Existe-t-il une exposition gratuite sur la photographie de mode à Paris ?
+Q02,in_scope,1.0,1.0,1.0,0.9583,True,Y a-t-il une exposition qui présente le métier et le travail des archéologues ?
+Q03,in_scope,1.0,1.0,1.0,0.9204,False,Quel concert de musique classique autour de Schumann est programmé à Paris ?
+Q04,in_scope,1.0,1.0,1.0,0.9281,True,"Quand et où a lieu le concert de Jazzy Bazz à Paris, et quel est le prix ?"
+Q05,in_scope,1.0,1.0,1.0,0.9471,True,Je cherche un concert rock en hommage au groupe The Clash à Paris.
+Q06,in_scope,1.0,1.0,1.0,0.937,True,Quel événement autour de la photographie argentique est organisé au Musée Postal ?
+Q07,in_scope,1.0,1.0,1.0,0.9144,True,Quels concerts mêlant jazz et musique brésilienne me conseilles-tu à Paris ?
+Q08,in_scope,1.0,1.0,1.0,0.8895,True,Dans quelle salle et à quelle date passe Bardix le Gaulois à Paris ?
+Q09,out_of_scope,,,,0.9655,True,Quels concerts ou festivals me recommandes-tu à Lyon ce week-end ?
+Q10,out_of_scope,,,,0.883,True,Peux-tu me donner la recette traditionnelle de la pâte à crêpes ?
+Q11,out_of_scope,,,,0.9034,True,Quel hôtel pas cher me conseilles-tu près de la gare de Lyon à Paris ?
