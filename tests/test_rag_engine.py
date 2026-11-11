@@ -46,6 +46,7 @@ def test_format_retrieved_documents():
     assert "--- DOCUMENT 1 ---" in formatted
     assert "Soirée Jazz Test" in formatted
     assert "Le Sunset" in formatted
+    assert "Horaires (heure de Paris) : Samedi 28 novembre à 20h" in formatted
     assert "https://openagenda.com/test-jazz" in formatted
     assert format_retrieved_documents([]) == "Aucun événement pertinent trouvé dans la base."
 

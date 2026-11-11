@@ -43,6 +43,7 @@ def test_chunking_with_context_header():
     assert chunks[0].metadata["chunk_index"] == 0
     assert chunks[1].metadata["chunk_index"] == 1
     assert "Événement (suite) : Festival Test" in chunks[1].page_content
+    assert "Horaires (heure de Paris) :" in chunks[1].page_content
     assert chunks[1].metadata["city"] == "Paris"
 
 

@@ -1,4 +1,4 @@
-﻿import json
+import json
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -118,3 +118,53 @@ def test_processed_dataset_uniqueness_and_text_integrity():
     assert (df["combined_text"].astype(str).str.strip() != "").all(), (
         "Certains événements ont un champ combined_text vide."
     )
+
+
+def test_processed_dataset_paris_timezone():
+    """Vérifie la conversion des horaires UTC vers Europe/Paris (+01:00 / +02:00) sans suffixe Z."""
+    sample_records = [
+        {
+            "uid": "201",
+            "title_fr": "Concert d'été à Paris",
+            "description_fr": "Test heure d'été CEST",
+            "location_city": "Paris",
+            "daterange_fr": "Jeudi 15 octobre 2026, 20h00",
+            "firstdate_begin": "2026-10-15T18:00:00Z",
+            "lastdate_end": "2026-10-15T21:00:00Z",
+        },
+        {
+            "uid": "202",
+            "title_fr": "Atelier d'hiver à Paris",
+            "description_fr": "Test heure d'hiver CET",
+            "location_city": "Paris",
+            "daterange_fr": "Lundi 15 mars 2027, 09h30",
+            "firstdate_begin": "2027-03-15T08:30:00Z",
+            "lastdate_end": "2027-03-15T11:30:00Z",
+        },
+    ]
+
+    df_paris = preprocess_events(
+        raw_records=sample_records,
+        target_city="Paris",
+        reference_date="2026-11-05",
+        history_days=365,
+        future_days=180,
+    )
+
+    row_summer = df_paris[df_paris["uid"] == "201"].iloc[0]
+    row_winter = df_paris[df_paris["uid"] == "202"].iloc[0]
+
+    assert row_summer["firstdate_begin"] == "2026-10-15T20:00:00+02:00"
+    assert row_winter["firstdate_begin"] == "2027-03-15T09:30:00+01:00"
+    assert "Horaires (heure de Paris) :" in row_winter["combined_text"]
+
+    df_disk = pd.read_json(PROCESSED_EVENTS_FILE)
+    first_dates = df_disk["firstdate_begin"].astype(str)
+    assert not first_dates.str.endswith("Z").any(), (
+        "Des horodatages sont encore stockés en UTC (Z) au lieu de Europe/Paris."
+    )
+    assert first_dates.str.endswith(("+01:00", "+02:00")).all(), (
+        "Tous les horodatages doivent porter l'offset Europe/Paris (+01:00 ou +02:00)."
+    )
+    assert df_disk["combined_text"].astype(str).str.contains("Horaires (heure de Paris)", regex=False).all()
+

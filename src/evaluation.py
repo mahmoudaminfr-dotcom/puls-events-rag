@@ -1,6 +1,6 @@
 """
 Module d'évaluation quantitative et qualitative du système RAG Puls-Events.
-Calcule le Hit Rate @ K (Retrieval), l'exactitude des faits clés (titre, date, lieu, URL),
+Calcule le Hit Rate @ K (Retrieval), l'exactitude des 5 faits clés (titre, date, heure, lieu, URL),
 le rappel des mots-clés, la similarité cosinus sémantique et la rigueur des refus.
 """
 
@@ -61,6 +61,73 @@ def normalize_text(text: str) -> str:
     return text.strip()
 
 
+def extract_hours_minutes(text: str) -> List[str]:
+    """
+    Extrait et normalise tous les horaires présents dans un texte au format canonique 'HHhMM'
+    (ex: '20h', '20 h', '20 h 00', '20:00', '20 heures' -> '20h00' ; '8 h 30', '08:30' -> '08h30').
+    """
+    if not text:
+        return []
+
+    cleaned = re.sub(r"https?://\S+", " ", text)
+    found: List[str] = []
+
+    patterns = [
+        r"(?<!\d)([01]?\d|2[0-3])\s*[hH](?:\s*([0-5]\d))?(?![0-9a-zA-ZÀ-ÿ])",
+        r"(?<!\d)([01]?\d|2[0-3])\s+heures?(?:\s*([0-5]\d))?(?!\d)",
+        r"(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)",
+    ]
+
+    for pattern in patterns:
+        for match in re.finditer(pattern, cleaned, flags=re.IGNORECASE):
+            hour = int(match.group(1))
+            minute = int(match.group(2)) if match.group(2) is not None else 0
+            canonical = f"{hour:02d}h{minute:02d}"
+            if canonical not in found:
+                found.append(canonical)
+
+    return found
+
+
+def check_time_match(
+    answer: str,
+    expected_time: Any,
+    forbidden_times: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Vérifie la conformité des horaires mentionnés dans la réponse :
+    - présence de tous les horaires attendus en heure de Paris (si définis) ;
+    - absence totale d'horaires UTC non convertis (forbidden_times).
+    """
+    extracted_times = extract_hours_minutes(answer)
+    forbidden_canonical: List[str] = []
+    for ft in (forbidden_times or []):
+        forbidden_canonical.extend(extract_hours_minutes(str(ft)))
+
+    no_forbidden_times = not any(t in extracted_times for t in forbidden_canonical)
+
+    if expected_time is None or expected_time == "" or expected_time == []:
+        expected_canonical: List[str] = []
+        expected_present = True
+    else:
+        raw_expected = (
+            expected_time if isinstance(expected_time, list) else [expected_time]
+        )
+        expected_canonical = []
+        for et in raw_expected:
+            expected_canonical.extend(extract_hours_minutes(str(et)))
+        expected_present = bool(expected_canonical) and all(
+            t in extracted_times for t in expected_canonical
+        )
+
+    return {
+        "extracted_times": extracted_times,
+        "expected_times": expected_canonical,
+        "expected_time_present": expected_present,
+        "no_forbidden_times": no_forbidden_times,
+    }
+
+
 def compute_cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
     """Calcule la similarité cosinus entre deux vecteurs d'embedding."""
     a = np.array(vec1, dtype=np.float64)
@@ -103,12 +170,13 @@ def compute_keyword_recall(answer: str, expected_keywords: List[str]) -> float:
 
 def evaluate_key_facts(
     answer: str,
-    expected_facts: Dict[str, str],
+    expected_facts: Dict[str, Any],
     forbidden_claims: Optional[List[str]] = None,
+    forbidden_times: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
-    Vérifie la présence des 4 faits clés obligatoires (titre, date, lieu, lien URL)
-    et l'absence d'affirmations contradictoires ou d'amalgames (forbidden_claims).
+    Vérifie la présence des 5 faits clés obligatoires (titre, date, heure, lieu, lien URL)
+    ainsi que l'absence d'amalgames (forbidden_claims) et d'horaires UTC décalés (forbidden_times).
     """
     norm_answer = normalize_text(answer)
     answer_lower = (answer or "").lower()
@@ -116,6 +184,7 @@ def evaluate_key_facts(
 
     title_val = expected_facts.get("title", "")
     date_val = expected_facts.get("date", "")
+    time_val = expected_facts.get("time")
     location_val = expected_facts.get("location", "")
     url_val = expected_facts.get("url", "")
 
@@ -123,21 +192,48 @@ def evaluate_key_facts(
     date_ok = bool(date_val) and (normalize_text(date_val) in norm_answer)
     location_ok = bool(location_val) and (normalize_text(location_val) in norm_answer)
     url_ok = bool(url_val) and (url_val.strip().lower() in answer_lower)
+
+    time_info = check_time_match(answer, time_val, forbidden_times)
+    no_forbidden_times = time_info["no_forbidden_times"]
+    if time_val is None or time_val == "" or time_val == []:
+        time_ok = date_ok and no_forbidden_times
+    else:
+        time_ok = time_info["expected_time_present"] and no_forbidden_times
+
     no_forbidden = not any(
         normalize_text(claim) in norm_answer for claim in forbidden_claims if claim
     )
 
     fact_score = round(
-        (int(title_ok) + int(date_ok) + int(location_ok) + int(url_ok)) / 4.0, 4
+        (
+            int(title_ok)
+            + int(date_ok)
+            + int(time_ok)
+            + int(location_ok)
+            + int(url_ok)
+        )
+        / 5.0,
+        4,
     )
-    all_valid = title_ok and date_ok and location_ok and url_ok and no_forbidden
+    all_valid = (
+        title_ok
+        and date_ok
+        and time_ok
+        and location_ok
+        and url_ok
+        and no_forbidden
+        and no_forbidden_times
+    )
 
     return {
         "title_ok": title_ok,
         "date_ok": date_ok,
+        "time_ok": time_ok,
         "location_ok": location_ok,
         "url_ok": url_ok,
+        "extracted_times": time_info["extracted_times"],
         "no_forbidden_claims": no_forbidden,
+        "no_forbidden_times": no_forbidden_times,
         "fact_score": fact_score,
         "all_valid": all_valid,
     }
@@ -208,6 +304,7 @@ def run_evaluation(
         expected_keywords = item.get("expected_keywords", [])
         expected_facts = item.get("expected_facts", {})
         forbidden_claims = item.get("forbidden_claims", [])
+        forbidden_times = item.get("forbidden_times", [])
 
         semantic_sim = round(
             compute_cosine_similarity(gt_vectors[idx], gen_vectors[idx]), 4
@@ -217,7 +314,10 @@ def run_evaluation(
             hit_rate = 1.0 if any(uid in retrieved_uids for uid in expected_uids) else 0.0
             kw_recall = compute_keyword_recall(generated_answer, expected_keywords)
             fact_checks = evaluate_key_facts(
-                generated_answer, expected_facts, forbidden_claims
+                generated_answer,
+                expected_facts,
+                forbidden_claims,
+                forbidden_times,
             )
             fact_score = fact_checks["fact_score"]
             is_correct = (
@@ -319,7 +419,7 @@ if __name__ == "__main__":
     print("=" * 80)
     print(f" - Questions évaluées              : {m['total_questions']} ({m['in_scope_count']} in-scope, {m['out_of_scope_count']} out-of-scope)")
     print(f" - Hit Rate @ 5 (Retrieval FAISS)  : {m['retrieval_hit_rate_at_k'] * 100:.1f}%")
-    print(f" - Exactitude des faits clés (4/4) : {m['mean_fact_score'] * 100:.1f}%")
+    print(f" - Exactitude des faits clés (5/5) : {m['mean_fact_score'] * 100:.1f}%")
     print(f" - Rappel moyen des mots-clés      : {m['mean_keyword_recall'] * 100:.1f}%")
     print(f" - Similarité sémantique (in-scope): {m['mean_semantic_similarity_in_scope']:.4f}")
     print(f" - Garde-fou hors périmètre        : {m['out_of_scope_guardrail_accuracy'] * 100:.1f}%")

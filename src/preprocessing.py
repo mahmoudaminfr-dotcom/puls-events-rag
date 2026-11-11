@@ -1,4 +1,4 @@
-﻿import html
+import html
 import json
 import logging
 import re
@@ -24,6 +24,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+_HAS_EXPLICIT_HOUR_RE = re.compile(r"(?<!\d)(?:[01]?\d|2[0-3])\s*[hH:]")
+
 
 def clean_html_and_whitespace(text: Any) -> str:
     """Supprime les balises HTML, décode les entités et normalise les espaces."""
@@ -42,6 +44,45 @@ def clean_html_and_whitespace(text: Any) -> str:
     return text_str.strip()
 
 
+def to_paris_iso(value: Any) -> str:
+    """Convertit un horodatage ISO (UTC ou avec offset) vers le fuseau Europe/Paris."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ""
+    raw = str(value).strip()
+    if not raw:
+        return ""
+    ts = pd.to_datetime(raw, utc=True, errors="coerce")
+    if pd.isna(ts):
+        return raw
+    return ts.tz_convert("Europe/Paris").isoformat()
+
+
+def format_paris_schedule(daterange_fr: str, first_paris_iso: str) -> str:
+    """Construit le libellé d'horaires en heure locale de Paris sans fuite UTC."""
+    dr = (daterange_fr or "").strip()
+    iso_str = to_paris_iso(first_paris_iso) if first_paris_iso else ""
+
+    paris_hour = ""
+    if iso_str and "T" in iso_str:
+        try:
+            dt = datetime.fromisoformat(iso_str)
+            if dt.hour >= 6:
+                paris_hour = f"{dt.hour:02d}h{dt.minute:02d}"
+        except ValueError:
+            paris_hour = ""
+
+    if dr:
+        if _HAS_EXPLICIT_HOUR_RE.search(dr) or not paris_hour:
+            return dr
+        return f"{dr} (à {paris_hour}, heure de Paris)"
+
+    if iso_str:
+        if paris_hour:
+            return f"{iso_str[:10]} à {paris_hour}"
+        return iso_str[:10]
+    return ""
+
+
 def build_combined_text(row: pd.Series) -> str:
     """Construit le texte complet structuré d'un événement pour la vectorisation."""
     parts = [
@@ -54,10 +95,12 @@ def build_combined_text(row: pd.Series) -> str:
         parts.append(
             f"Adresse : {row['location_address']} {row.get('location_postalcode', '')}".strip()
         )
-    if row.get("daterange_fr"):
-        parts.append(f"Horaires / Dates : {row['daterange_fr']}")
-    elif row.get("firstdate_begin"):
-        parts.append(f"Date de début : {str(row['firstdate_begin'])[:10]}")
+    schedule_paris = format_paris_schedule(
+        str(row.get("daterange_fr") or ""),
+        str(row.get("firstdate_begin") or ""),
+    )
+    if schedule_paris:
+        parts.append(f"Horaires (heure de Paris) : {schedule_paris}")
     if row.get("category"):
         parts.append(f"Catégorie : {row['category']}")
     if row.get("conditions_fr"):
@@ -154,10 +197,14 @@ def preprocess_events(
         (df["firstdate_begin_dt"] >= min_dt) & (df["firstdate_begin_dt"] <= max_dt)
     ].copy()
 
-    # Formatage ISO propre pour stockage
-    df["firstdate_begin"] = df["firstdate_begin_dt"].dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-    df["lastdate_end"] = (
-        df["lastdate_end_dt"].dt.strftime("%Y-%m-%dT%H:%M:%SZ").fillna("")
+    # Conversion explicite des horodatages ISO vers le fuseau Europe/Paris (+01:00 / +02:00)
+    paris_begin = df["firstdate_begin_dt"].dt.tz_convert("Europe/Paris")
+    paris_end = df["lastdate_end_dt"].dt.tz_convert("Europe/Paris")
+    df["firstdate_begin"] = paris_begin.apply(
+        lambda dt: dt.isoformat() if pd.notna(dt) else ""
+    )
+    df["lastdate_end"] = paris_end.apply(
+        lambda dt: dt.isoformat() if pd.notna(dt) else ""
     )
     df = df.drop(columns=["firstdate_begin_dt", "lastdate_end_dt"])
 

@@ -62,7 +62,7 @@ def render_sources(sources: List[Dict[str, Any]], raw_chunks: List[Any]) -> None
 
                 score_label = f"{score:.4f}" if isinstance(score, (int, float)) else "N/A"
                 header = f"**{idx}. {title}** — `{location}` ({city})"
-                details = f"Dates : {daterange} | Distance L2 FAISS : `{score_label}`"
+                details = f"Horaires (heure de Paris) : {daterange} | Distance L2 FAISS : `{score_label}`"
                 if url:
                     details += f" | [Fiche Open Agenda]({url})"
 
@@ -85,7 +85,7 @@ def render_sources(sources: List[Dict[str, Any]], raw_chunks: List[Any]) -> None
                     f"Métadonnées FAISS — Ville : {chunk_city} | "
                     f"Lieu : {chunk_location} | "
                     f"Adresse : {chunk_address} | "
-                    f"Dates : {chunk_dates}"
+                    f"Horaires (heure de Paris) : {chunk_dates}"
                 )
                 st.code(content, language="text", wrap_lines=True)
                 if idx < len(raw_chunks):

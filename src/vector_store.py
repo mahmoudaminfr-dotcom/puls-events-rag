@@ -15,6 +15,7 @@ from langchain_mistralai import MistralAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 import src.config as config
+from src.preprocessing import format_paris_schedule, to_paris_iso
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,7 +53,7 @@ def create_chunks(
 ) -> List[Document]:
     """
     Découpe le texte combiné de chaque événement en objets Document LangChain
-    tout en conservant les métadonnées critiques dans chaque chunk.
+    tout en conservant les métadonnées critiques et les horaires en heure de Paris.
     """
     t0 = time.perf_counter()
     text_splitter = RecursiveCharacterTextSplitter(
@@ -69,6 +70,21 @@ def create_chunks(
         if not combined_text:
             continue
 
+        raw_first = str(event.get("firstdate_begin") or event.get("first_date") or "")
+        raw_last = str(event.get("lastdate_end") or event.get("last_date") or "")
+        first_paris = to_paris_iso(raw_first) if "T" in raw_first else raw_first
+        last_paris = to_paris_iso(raw_last) if "T" in raw_last else raw_last
+        raw_daterange = str(event.get("daterange_fr") or event.get("daterange") or "")
+
+        schedule_paris = format_paris_schedule(raw_daterange, first_paris)
+        if (
+            not raw_daterange
+            and last_paris
+            and first_paris
+            and last_paris[:10] != first_paris[:10]
+        ):
+            schedule_paris = f"{schedule_paris} au {last_paris[:10]}"
+
         base_metadata = {
             "uid": str(event.get("uid") or ""),
             "title": str(event.get("title_fr") or event.get("title") or ""),
@@ -76,9 +92,9 @@ def create_chunks(
             "location_name": str(event.get("location_name") or ""),
             "address": str(event.get("location_address") or event.get("address") or ""),
             "postal_code": str(event.get("location_postalcode") or ""),
-            "daterange": str(event.get("daterange_fr") or ""),
-            "first_date": str(event.get("firstdate_begin") or event.get("first_date") or ""),
-            "last_date": str(event.get("lastdate_end") or event.get("last_date") or ""),
+            "daterange": schedule_paris,
+            "first_date": first_paris,
+            "last_date": last_paris,
             "url": str(event.get("canonicalurl") or event.get("url") or ""),
             "category": str(event.get("category") or ""),
         }
@@ -90,7 +106,7 @@ def create_chunks(
                 header = (
                     f"Événement (suite) : {base_metadata['title']} | "
                     f"Ville : {base_metadata['city']} | "
-                    f"Dates : {base_metadata['first_date']} au {base_metadata['last_date']}\n"
+                    f"Horaires (heure de Paris) : {schedule_paris}\n"
                 )
                 page_content = header + split_text
             else:

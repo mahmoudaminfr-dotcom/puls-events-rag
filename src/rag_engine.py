@@ -14,6 +14,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
 
 import src.config as config
+from src.preprocessing import format_paris_schedule
 from src.vector_store import FAISS_INDEX_DIR, load_faiss_index
 
 logging.basicConfig(
@@ -28,16 +29,16 @@ REFERENCE_DATE = getattr(config, "REFERENCE_DATE", "2026-11-05")
 DEFAULT_TOP_K = getattr(config, "RETRIEVER_K", 5)
 
 SYSTEM_PROMPT = """Tu es l'assistant virtuel officiel de Puls-Events, spécialisé dans la recommandation d'événements culturels à Paris.
-La date de référence actuelle est le {reference_date}.
+La date de référence actuelle est le {reference_date} (tous les événements parisiens fournis dans le [CONTEXTE], y compris ceux programmés en 2026 et 2027, font pleinement partie du périmètre valide de Puls-Events).
 
 RÈGLES STRICTES :
 1. Réponds UNIQUEMENT à partir des événements fournis dans le bloc [CONTEXTE] ci-dessous, sans utiliser aucune connaissance externe.
-2. N'invente JAMAIS d'événement, de date, d'adresse, de tarif ou de lien URL.
-3. ISOLATION DES FICHES : ne mélange JAMAIS les informations (compositeurs, artistes, œuvres au programme, dates, lieux ou tarifs) provenant de deux blocs DOCUMENT différents. Décris chaque événement uniquement avec les éléments figurant dans son propre bloc DOCUMENT.
+2. N'invente JAMAIS d'événement, de date, d'horaire, d'adresse, de tarif ou de lien URL.
+3. ISOLATION DES FICHES : ne mélange JAMAIS les informations (compositeurs, artistes, œuvres au programme, dates, horaires, lieux ou tarifs) provenant de deux blocs DOCUMENT différents. Décris chaque événement uniquement avec les éléments figurant dans son propre bloc DOCUMENT.
 4. DEMANDES HORS PÉRIMÈTRE : si la demande porte sur une autre ville que Paris, sur un sujet non culturel ou non événementiel (recette de cuisine, hébergement/hôtel, météo, transport), ou si aucun événement du [CONTEXTE] ne correspond réellement à la recherche, réponds uniquement par un refus court et poli indiquant que tu ne disposes d'aucun événement correspondant dans la base Puls-Events. Ne propose AUCUN événement de substitution approximatif ni aucun lien URL dans ce cas.
 5. STRUCTURE OBLIGATOIRE : pour CHAQUE événement recommandé (même si tu en cites plusieurs), mentionne obligatoirement :
    - Le titre exact de l'événement
-   - Les dates et horaires exacts
+   - Les dates et horaires exacts en heure de Paris tels qu'indiqués dans le champ « Horaires (heure de Paris) » du document (sans jamais décaler l'heure ; si aucune heure précise n'est publiée pour une exposition sur plusieurs jours, indique uniquement les dates)
    - Le nom du lieu et l'adresse complète
    - Un bref résumé strictement fidèle au programme de cet événement
    - Le lien URL complet tel qu'affiché dans le champ URL du document
@@ -55,12 +56,16 @@ def format_retrieved_documents(docs: List[Document]) -> str:
     formatted_blocks = []
     for idx, doc in enumerate(docs, start=1):
         meta = doc.metadata
+        schedule = format_paris_schedule(
+            str(meta.get("daterange") or ""),
+            str(meta.get("first_date") or ""),
+        ) or "Non spécifié"
         block = (
             f"--- DOCUMENT {idx} ---\n"
             f"Titre : {meta.get('title', 'Non spécifié')}\n"
             f"Ville : {meta.get('city', 'Paris')}\n"
             f"Lieu : {meta.get('location_name', 'Non spécifié')} ({meta.get('address', '')})\n"
-            f"Dates : {meta.get('daterange') or (meta.get('first_date', '') + ' au ' + meta.get('last_date', ''))}\n"
+            f"Horaires (heure de Paris) : {schedule}\n"
             f"URL : {meta.get('url', 'Non disponible')}\n"
             f"Contenu : {doc.page_content}\n"
         )
